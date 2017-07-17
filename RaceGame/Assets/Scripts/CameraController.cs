@@ -8,7 +8,7 @@ public delegate void DisableMoveCameraDelegate();
 public class CameraController : MonoBehaviour
 {
     [SerializeField]
-    private float _MoveSpeed, speedH, speedV;
+    private float _MoveSpeed, speedH, speedV, _ZoomSpeed;
 
     private float xRotation;
     private float yRotation;
@@ -18,12 +18,14 @@ public class CameraController : MonoBehaviour
     public event DisableMoveCameraDelegate DisableMoveCameraEvent;
 
 
+    //Checks when to disable the UI and when to call which movement functions.
     private void Update ()
     {
+#region UI calling
         if (EnableMoveCameraEvent != null)
         {
             //Check when the player wants to move the camera.
-            if (Input.GetMouseButtonDown(1))
+            if ((Input.GetMouseButtonDown(1)) || (Input.GetAxis("Mouse ScrollWheel") != 0))
             {
                 EnableMoveCameraEvent.Invoke();
 
@@ -33,7 +35,7 @@ public class CameraController : MonoBehaviour
             }
 
             //Check when the player stops moving the camera.
-            if (Input.GetMouseButtonUp(1))
+            if ((Input.GetMouseButtonUp(1)) || (Input.GetAxis("Mouse ScrollWheel") == 0))
             {
                 DisableMoveCameraEvent.Invoke();
 
@@ -42,6 +44,10 @@ public class CameraController : MonoBehaviour
                 Cursor.visible = true;
             }
         }
+        #endregion
+#region Movement calling
+        //Make sure the user can always zoom.
+        Zoom();
 
         //While the player moves the camera.
         if (Input.GetMouseButton(1))
@@ -49,6 +55,7 @@ public class CameraController : MonoBehaviour
             MoveCamera();
             RotateCamera();
         }
+#endregion
     }
 
 
@@ -70,5 +77,12 @@ public class CameraController : MonoBehaviour
         yRotation -= speedV * Input.GetAxis("Mouse Y");
 
         transform.eulerAngles = new Vector3(yRotation, xRotation, 0.0f);
+    }
+
+
+    //Move the camera forward and backward (functions as zoom).
+    private void Zoom()
+    {
+        transform.position += transform.forward * Input.GetAxis("Mouse ScrollWheel") * _ZoomSpeed * Time.deltaTime;
     }
 }
